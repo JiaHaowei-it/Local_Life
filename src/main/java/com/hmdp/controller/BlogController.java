@@ -32,7 +32,7 @@ public class BlogController {
     @Resource
     private IUserService userService;
 
-    @PostMapping
+    /*@PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
         // 获取登录用户
         UserDTO user = UserHolder.getUser();
@@ -41,7 +41,7 @@ public class BlogController {
         blogService.save(blog);
         // 返回id
         return Result.ok(blog.getId());
-    }
+    }*/
 
     @PutMapping("/like/{id}")
     public Result likeBlog(@PathVariable("id") Long id) {
@@ -51,7 +51,7 @@ public class BlogController {
         return Result.ok();
     }
 
-    @GetMapping("/of/me")
+    /*@GetMapping("/of/me")
     public Result queryMyBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
         // 获取登录用户
         UserDTO user = UserHolder.getUser();
@@ -61,7 +61,7 @@ public class BlogController {
         // 获取当前页数据
         List<Blog> records = page.getRecords();
         return Result.ok(records);
-    }
+    }*/
 
     @GetMapping("/hot")
     public Result queryHotBlog(@RequestParam(value = "current", defaultValue = "1") Integer current) {
