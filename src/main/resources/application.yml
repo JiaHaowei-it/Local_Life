@@ -3,15 +3,17 @@ server:
 spring:
   application:
     name: hmdp
+  profiles:
+    active: dev
   datasource:
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/hmdp?useSSL=false&serverTimezone=UTC
     username: root
     password: 1234
   redis:
-    host: localhost
-    port: 6379
-    password: 1234
+    host: ${localLife.redis.host}
+    port: ${localLife.redis.port}
+    password: ${localLife.redis.password}
     lettuce:
       pool:
         max-active: 10
