@@ -14,12 +14,14 @@ spring:
     host: ${localLife.redis.host}
     port: ${localLife.redis.port}
     password: ${localLife.redis.password}
+    database: 0
     lettuce:
       pool:
         max-active: 10
         max-idle: 10
         min-idle: 1
         time-between-eviction-runs: 10s
+      validate-connection: true # 从连接池拿连接前ping校验，避免拿到失效连接
   jackson:
     default-property-inclusion: non_null # JSON处理时忽略非空字段
 mybatis-plus:
