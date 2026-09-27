@@ -44,10 +44,19 @@ public class ShopServiceImpl extends ServiceImpl<ShopMapper, Shop> implements IS
             JSONUtil.toBean(shopCache, Shop.class);
             return Result.ok(shopCache);
         }
+
+        //判断从缓存中查到的是否是空值
+        if (shopCache != null){
+            //返回错误信息
+            return Result.fail("店铺信息不存在!");
+        }
+
         //4.不存在，根据商铺id查询数据库
         Shop shop = getById(id);
         //5.不存在，返回错误
         if (shop == null){
+            //缓存空值
+            stringRedisTemplate.opsForValue().set(Key,"",RedisConstants.CACHE_NULL_TTL,TimeUnit.MINUTES);
             return Result.fail("店铺不存在!");
         }
         //6.存在，写入redis
