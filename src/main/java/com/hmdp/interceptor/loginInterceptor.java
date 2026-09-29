@@ -35,7 +35,7 @@ public class loginInterceptor implements HandlerInterceptor {
             response.setStatus(401);
         }
         //2.基于token获取redis中的用户
-        String key = RedisConstants.LOGIN_USER_KEY;
+        String key = RedisConstants.LOGIN_USER_KEY + token;   // 补上 + token
         Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
         //3.判断用户是否存在
         if (userMap.isEmpty()){
