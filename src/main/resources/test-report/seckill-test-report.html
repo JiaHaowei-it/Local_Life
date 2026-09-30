@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>优惠券秒杀下单业务测试报告</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2322303f'/%3E%3Cpath d='M18 33l10 10 18-20' stroke='%2335c07a' stroke-width='7' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#f4f6f9;
+    --surface:#ffffff;
+    --ink:#22303f;
+    --ink-2:#3a4a5e;
+    --muted:#5c6b80;
+    --line:#dfe6ee;
+    --accent:#1a6feb;
+    --accent-soft:#e8f1fd;
+    --pass:#178a52;
+    --pass-soft:#e6f4ec;
+    --warn:#c2571a;
+    --warn-soft:#fdf0e6;
+    --fail:#c0392b;
+    --fail-soft:#fcebe9;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:40px 20px 72px;}
+  /* ---------- header ---------- */
+  .masthead{
+    background:linear-gradient(135deg,#22303f 0%,#1d2f42 55%,#17324a 100%);
+    color:#f6f9ff;
+    border-radius:14px;
+    padding:30px 32px 26px;
+    position:relative;
+  }
+  .kicker{
+    font-size:12px;letter-spacing:.18em;color:#9db4e8;
+    text-transform:uppercase;font-weight:600;margin-bottom:10px;
+  }
+  .masthead h1{font-size:28px;font-weight:800;letter-spacing:.01em;line-height:1.3;}
+  .masthead .sub{margin-top:8px;color:#c7d4ec;font-size:14px;}
+  .meta-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px;
+  }
+  .meta-item{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:10px 12px;}
+  .meta-item .k{font-size:11px;color:#9db4e8;}
+  .meta-item .v{font-size:13px;color:#f0f5ff;margin-top:2px;font-weight:600;}
+  .verdict{
+    display:inline-flex;align-items:center;gap:7px;
+    margin-top:20px;background:rgba(23,138,82,.16);border:1px solid rgba(84,205,141,.5);
+    color:#8ce0b4;font-weight:700;font-size:13px;
+    padding:6px 14px;border-radius:999px;
+  }
+  .verdict .dot{width:8px;height:8px;border-radius:50%;background:#35c07a;}
+  /* ---------- sections ---------- */
+  section{margin-top:36px;}
+  .sec-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;}
+  .sec-num{
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    color:var(--accent);font-weight:700;font-size:15px;
+  }
+  .sec-head h2{font-size:20px;font-weight:800;color:var(--ink);}
+  .sec-head .en{margin-left:auto;font-size:11px;color:var(--muted);letter-spacing:.05em;}
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:20px 22px;
+  }
+  p.lead{color:var(--ink-2);font-size:14px;}
+  p{color:var(--ink-2);}
+  /* ---------- highlight numbers ---------- */
+  .highlights{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:16px;}
+  .hl{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;}
+  .hl .n{
+    font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;
+    font-size:26px;font-weight:800;color:var(--ink);
+  }
+  .hl .n small{font-size:14px;color:var(--muted);font-weight:600;}
+  .hl .t{font-size:12px;color:var(--muted);margin-top:4px;}
+  .hl.accent .n{color:var(--accent);}
+  .hl.pass .n{color:var(--pass);}
+  .hl.warn .n{color:var(--warn);}
+  /* ---------- tables ---------- */
+  .tbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px;margin-top:6px;}
+  .tbl th{
+    background:#eef2f8;color:var(--ink);text-align:left;font-weight:700;
+    padding:9px 12px;border:1px solid var(--line);vertical-align:middle;
+  }
+  .tbl td{padding:8px 12px;border:1px solid var(--line);vertical-align:middle;color:var(--ink-2);}
+  .tbl td.c,.tbl th.c{text-align:center;}
+  .tbl td.n{text-align:right;font-family:ui-monospace,"Cascadia Mono",Consolas,monospace;color:var(--ink);}
+  .tbl tr:nth-child(even) td{background:#fafbfd;}
+  .tag{display:inline-block;padding:1px 8px;border-radius:5px;font-size:12px;font-weight:700;}
+  .tag.pass{background:var(--pass-soft);color:var(--pass);}
+  .tag.fail{background:var(--fail-soft);color:var(--fail);}
+  .tag.warn{background:var(--warn-soft);color:var(--warn);}
+  .tag.blue{background:var(--accent-soft);color:var(--accent);}
+  /* ---------- flow ---------- */
+  .flow{display:flex;flex-direction:column;gap:0;font-size:13px;}
+  .flow .node{
+    background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:8px;padding:8px 14px;color:var(--ink-2);
+  }
+  .flow .node b{color:var(--ink);}
+  .flow .arrow{width:2px;height:12px;background:var(--line);margin-left:16px;}
+  .flow .branch{background:var(--warn-soft);border-color:#f0d2b4;border-left-color:var(--warn);color:#7a4a22;}
+  .flow .passnode{background:var(--pass-soft);border-color:#c7e6d5;border-left-color:var(--pass);color:#115c37;}
+  .flow .tx{background:var(--accent-soft);border-color:#cdddf6;border-left-color:var(--accent);}
+  /* ---------- chart ---------- */
+  .chartbox{height:340px;margin-top:8px;}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;}
+  /* ---------- defect rows ---------- */
+  .defect{display:flex;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;background:var(--surface);}
+  .defect .sev{flex:0 0 56px;text-align:center;}
+  .defect .sev .b{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;font-weight:700;}
+  .defect .body h4{font-size:14px;color:var(--ink);}
+  .defect .body p{font-size:13px;color:var(--muted);margin-top:3px;}
+  /* ---------- conclusion ---------- */
+  .concl ul{list-style:none;padding:0;margin-top:6px;}
+  .concl li{padding:7px 0 7px 22px;position:relative;color:var(--ink-2);font-size:14px;border-bottom:1px dashed var(--line);}
+  .concl li:last-child{border-bottom:none;}
+  .concl li::before{content:"";position:absolute;left:2px;top:14px;width:8px;height:8px;border-radius:2px;background:var(--accent);}
+  .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:44px;border-top:1px solid var(--line);padding-top:18px;}
+  /* ---------- responsive ---------- */
+  @media(max-width:720px){
+    .wrap{padding:20px 14px 56px;}
+    .masthead{padding:24px 20px;}
+    .masthead h1{font-size:22px;}
+    .meta-grid,.highlights{grid-template-columns:repeat(2,1fr);}
+    .chartbox{height:300px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== 头部 ===== -->
+  <header class="masthead">
+    <div class="kicker">Software Test Report</div>
+    <h1>优惠券秒杀下单业务测试报告</h1>
+    <div class="sub">黑马点评（hm-dianping）· VoucherOrderServiceImpl · secVoucherKill / createVoucherOrder</div>
+    <div class="meta-grid">
+      <div class="meta-item"><div class="k">测试类型</div><div class="v">黑盒 + 并发压测</div></div>
+      <div class="meta-item"><div class="k">测试时间</div><div class="v">2026-09-30</div></div>
+      <div class="meta-item"><div class="k">并发规模</div><div class="v">200 用户 / 100 库存</div></div>
+      <div class="meta-item"><div class="k">数据库</div><div class="v">MySQL 8.0 · hmdp</div></div>
+    </div>
+    <div class="verdict"><span class="dot"></span>结论：通过 — 防超卖 &amp; 一人一单均符合预期</div>
+  </header>
+
+  <!-- ===== 01 概述 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">01</span><h2>测试概述</h2><span class="en">OVERVIEW</span></div>
+    <div class="card">
+      <p class="lead">对优惠券秒杀下单业务进行黑盒功能测试与并发压力测试，重点验证两项核心保证：</p>
+      <div class="highlights">
+        <div class="hl pass"><div class="n">0<small> 超卖</small></div><div class="t">并发下库存不出现负数</div></div>
+        <div class="hl accent"><div class="n">100<small> / 100</small></div><div class="t">订单数与库存严格一致</div></div>
+        <div class="hl pass"><div class="n">1<small> / 用户</small></div><div class="t">单用户最大订单数</div></div>
+        <div class="hl warn"><div class="n">0<small> 重复单</small></div><div class="t">已下单用户再抢全部被拒</div></div>
+      </div>
+      <p class="note">方法：等价类划分 + 边界值分析 + 场景法（黑盒）；@SpringBootTest + CyclicBarrier 多线程同步放行（压测），并以数据库实况校验。</p>
+    </div>
+  </section>
+
+  <!-- ===== 02 环境 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">02</span><h2>测试环境</h2><span class="en">ENVIRONMENT</span></div>
+    <div class="card">
+      <table class="tbl">
+        <colgroup><col style="width:30%"><col style="width:70%"></colgroup>
+        <thead><tr><th>类别</th><th>配置</th></tr></thead>
+        <tbody>
+          <tr><td>运行平台</td><td>Windows · Java JDK 17.0.12</td></tr>
+          <tr><td>构建工具</td><td>Maven 3.9.4</td></tr>
+          <tr><td>开发框架</td><td>Spring Boot 2.7.3 · MyBatis-Plus 3.4.3</td></tr>
+          <tr><td>数据库</td><td>MySQL 8.0（127.0.0.1:3306 / hmdp）</td></tr>
+          <tr><td>缓存 / 中间件</td><td>Redis（49.235.142.147:6379）</td></tr>
+          <tr><td>压测工具</td><td>JUnit 5 + 并发用例（CyclicBarrier）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 03 业务分析 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">03</span><h2>被测业务分析</h2><span class="en">BUSINESS</span></div>
+    <div class="card">
+      <p class="lead">接口 <code>POST /voucher-order/seckill/{id}</code>，核心判定顺序：</p>
+      <div class="flow" style="margin-top:12px;">
+        <div class="node">1. 查询秒杀券 <b>getById(voucherId)</b></div>
+        <div class="arrow"></div>
+        <div class="node branch">2. <b>beginTime &gt; now</b> → 「秒杀尚未开始!」</div>
+        <div class="arrow"></div>
+        <div class="node branch">3. <b>endTime &lt; now</b> → 「秒杀已结束!」</div>
+        <div class="arrow"></div>
+        <div class="node branch">4. <b>stock &lt; 1</b> → 「库存不足」</div>
+        <div class="arrow"></div>
+        <div class="node">5. 取当前用户（UserHolder / ThreadLocal）</div>
+        <div class="arrow"></div>
+        <div class="node branch">6. 获取分布式锁 <b>tryLock("lock:order:{userId}")</b> 失败 → 「不允许重复下单」</div>
+        <div class="arrow"></div>
+        <div class="node tx">7. 事务 <b>createVoucherOrder</b>：一人一单校验 → 乐观锁扣库存（stock&gt;0）→ 生成分布式 ID 插入订单</div>
+        <div class="arrow"></div>
+        <div class="node passnode">8. finally 释放锁（Lua 比对线程标识后删除）</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <table class="tbl">
+        <colgroup><col style="width:22%"><col style="width:46%"><col style="width:32%"></colgroup>
+        <thead><tr><th>机制</th><th>实现</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td>一人一单</td><td>按 userId 的 Redis 分布式锁 + 事务内订单计数</td><td>同用户并发串行，防重复下单</td></tr>
+          <tr><td>防超卖</td><td>乐观锁 SET stock=stock-1 WHERE stock&gt;0</td><td>库存不出现负数</td></tr>
+          <tr><td>删锁原子性</td><td>Lua 脚本比对线程标识后再 del</td><td>防止误删他人锁</td></tr>
+          <tr><td>分布式 ID</td><td>RedisIdWorker：时间戳左移 32 位 + 按天自增</td><td>订单主键全局唯一、趋势递增</td></tr>
+          <tr><td>事务生效</td><td>@EnableAspectJAutoProxy(exposeProxy) + AopContext</td><td>扣库存与插单同事务原子</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 04 测试设计 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">04</span><h2>测试设计</h2><span class="en">TEST DESIGN</span></div>
+    <div class="card">
+      <p class="lead"><b>等价类划分</b></p>
+      <table class="tbl" style="margin-top:8px;">
+        <colgroup><col style="width:16%"><col style="width:42%"><col style="width:42%"></colgroup>
+        <thead><tr><th>输入/状态</th><th>有效等价类</th><th>无效等价类</th></tr></thead>
+        <tbody>
+          <tr><td>voucherId</td><td>存在的秒杀券 id</td><td>不存在的 id · 普通券 id · null</td></tr>
+          <tr><td>秒杀时间</td><td>进行中（begin≤now≤end）</td><td>未开始（now&lt;begin）· 已结束（now&gt;end）</td></tr>
+          <tr><td>库存</td><td>stock ≥ 1</td><td>stock=0 · stock&lt;0（脏数据）</td></tr>
+          <tr><td>用户</td><td>已登录且未下单</td><td>未登录 · 已下单（一人一单）</td></tr>
+          <tr><td>锁</td><td>锁可获取</td><td>锁被同用户占用</td></tr>
+        </tbody>
+      </table>
+      <p class="lead" style="margin-top:16px;"><b>边界值</b></p>
+      <p style="font-size:13px;margin-top:4px;">now = beginTime（允许）· now = endTime（当前代码仍允许，语义待确认）· stock = 1 · stock = 0</p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <p class="lead"><b>功能测试用例（TC-01 ~ TC-16）</b></p>
+      <table class="tbl" style="margin-top:8px;">
+        <colgroup><col style="width:9%"><col style="width:21%"><col style="width:30%"><col style="width:14%"><col style="width:26%"></colgroup>
+        <thead><tr><th>编号</th><th>用例名称</th><th>前置条件</th><th>操作</th><th>预期结果</th></tr></thead>
+        <tbody>
+          <tr><td class="c">TC-01</td><td>正常秒杀成功</td><td>进行中、stock=5、未下单</td><td>下单</td><td>返回 orderId；库存-1；订单+1</td></tr>
+          <tr><td class="c">TC-02</td><td>秒杀未开始</td><td>beginTime 在未来</td><td>下单</td><td>「秒杀尚未开始!」</td></tr>
+          <tr><td class="c">TC-03</td><td>秒杀已结束</td><td>endTime 已过</td><td>下单</td><td>「秒杀已结束!」</td></tr>
+          <tr><td class="c">TC-04</td><td>库存不足(=0)</td><td>进行中、stock=0</td><td>下单</td><td>「库存不足」</td></tr>
+          <tr><td class="c">TC-05</td><td>库存最后一件</td><td>stock=1</td><td>第1单后再下</td><td>第2单「库存不足」</td></tr>
+          <tr><td class="c">TC-06</td><td>一人一单</td><td>用户已成功下单</td><td>再次下单</td><td>「该优惠券每人仅限一单!」</td></tr>
+          <tr><td class="c">TC-07</td><td>同用户并发重复下单</td><td>未下单、库存充足</td><td>两线程同时</td><td>仅1单成功；另一线程被拒；订单只+1</td></tr>
+          <tr><td class="c">TC-08</td><td>多用户并发防超卖</td><td>100 用户抢 stock=10</td><td>并发下单</td><td>成功≤10、库存≥0、无超卖</td></tr>
+          <tr><td class="c">TC-09</td><td>优惠券不存在</td><td>传不存在 id</td><td>下单</td><td><span class="tag fail">抛 NPE（缺陷）</span></td></tr>
+          <tr><td class="c">TC-10</td><td>传普通券 id</td><td>传非秒杀券 id</td><td>下单</td><td><span class="tag fail">抛 NPE（缺陷）</span></td></tr>
+          <tr><td class="c">TC-11</td><td>未登录访问</td><td>无 authorization 头</td><td>下单</td><td><span class="tag fail">拦截器未拦截 → NPE（缺陷）</span></td></tr>
+          <tr><td class="c">TC-12</td><td>边界：开始时刻</td><td>now=beginTime</td><td>下单</td><td>允许下单</td></tr>
+          <tr><td class="c">TC-13</td><td>边界：结束时刻</td><td>now=endTime</td><td>下单</td><td><span class="tag warn">当前代码允许（语义待确认）</span></td></tr>
+          <tr><td class="c">TC-14</td><td>库存为负(脏数据)</td><td>stock=-1</td><td>下单</td><td>「库存不足」</td></tr>
+          <tr><td class="c">TC-15</td><td>路径参数非法</td><td>id=abc / 空</td><td>下单</td><td>400 参数类型错误</td></tr>
+          <tr><td class="c">TC-16</td><td>传 null</td><td>id 为 null</td><td>下单</td><td>400 或 NPE</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== 05 压测结果 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">05</span><h2>压力测试执行与结果</h2><span class="en">STRESS TEST</span></div>
+    <div class="card">
+      <p class="lead">专用压测秒杀券（进行中时间窗，初始库存 100）。阶段一 200 个不同用户并发各抢一次（2 倍超订）；阶段二 50 个已下单用户再次并发抢购（库存补回 50）。</p>
+      <div class="chartbox" id="chart"></div>
+      <p class="note">图：请求结果分布（实际执行数据，2026-09-30）。</p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <p class="lead"><b>阶段一 · 防超卖（200 并发抢 100 库存）</b></p>
+      <table class="tbl" style="margin-top:8px;">
+        <colgroup><col style="width:30%"><col style="width:20%"><col style="width:50%"></colgroup>
+        <thead><tr><th>结果分类</th><th class="c">数量</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>成功下单</td><td class="c"><b>100</b></td><td>恰好卖光，库存扣至 0</td></tr>
+          <tr><td>库存不足</td><td class="c">100</td><td>2 倍超订的溢出部分，全部被拒</td></tr>
+          <tr><td>未开始 / 已结束 / 重复下单 / 异常</td><td class="c">0</td><td>无脏结果</td></tr>
+        </tbody>
+      </table>
+      <p class="note">DB 校验：库存 = <b>0</b>（无负数）· 订单 = <b>100</b> · 单用户最大订单 = <b>1</b>。耗时 7487 ms，吞吐约 27 req/s（受连接池 100 + MySQL 行锁串行扣减限制）。</p>
+    </div>
+    <div class="card" style="margin-top:14px;">
+      <p class="lead"><b>阶段二 · 一人一单（50 个已下单用户再抢 50 库存）</b></p>
+      <table class="tbl" style="margin-top:8px;">
+        <colgroup><col style="width:30%"><col style="width:20%"><col style="width:50%"></colgroup>
+        <thead><tr><th>结果分类</th><th class="c">数量</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>重复下单成功</td><td class="c"><b>0</b></td><td>全部被拒</td></tr>
+          <tr><td>每人仅限一单</td><td class="c">50</td><td>已下单用户再抢全部命中该拦截</td></tr>
+        </tbody>
+      </table>
+      <p class="note">DB 校验：库存 = <b>50</b>（未变化）· 订单 = <b>100</b>（未增加）。耗时 156 ms，吞吐约 321 req/s。</p>
+    </div>
+  </section>
+
+  <!-- ===== 06 缺陷记录 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">06</span><h2>缺陷与风险记录</h2><span class="en">DEFECTS</span></div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--fail-soft);color:var(--fail);">高</span></div>
+      <div class="body"><h4>BUG-01 · 券不存在时抛 NPE</h4><p>getById 返回 null，voucher.getBeginTime() 空指针，未做空值兜底。</p></div>
+    </div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--fail-soft);color:var(--fail);">高</span></div>
+      <div class="body"><h4>BUG-02 · 传普通券 id 抛 NPE</h4><p>tb_seckill_voucher 无该主键 → getById 返回 null。</p></div>
+    </div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--fail-soft);color:var(--fail);">高</span></div>
+      <div class="body"><h4>BUG-03 · 未登录访问抛 NPE</h4><p>拦截器 setStatus(401) 后未 return false，请求仍放行，UserHolder 为 null。</p></div>
+    </div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--warn-soft);color:var(--warn);">中</span></div>
+      <div class="body"><h4>RISK-04 · 结束时刻边界语义</h4><p>endTime.isBefore(now) 在 now=endTime 时仍允许下单，需与业务确认。</p></div>
+    </div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--warn-soft);color:var(--warn);">中</span></div>
+      <div class="body"><h4>RISK-05 · 缺少唯一约束兜底</h4><p>(user_id, voucher_id) 未建唯一索引，依赖锁保障，锁失效时可能重复下单。</p></div>
+    </div>
+    <div class="defect">
+      <div class="sev"><span class="b" style="background:var(--accent-soft);color:var(--accent);">低</span></div>
+      <div class="body"><h4>RISK-06 · 锁超时风险</h4><p>锁超时 1200s，业务超时锁提前过期时极端并发下可能失效。</p></div>
+    </div>
+  </section>
+
+  <!-- ===== 07 结论 ===== -->
+  <section>
+    <div class="sec-head"><span class="sec-num">07</span><h2>测试结论与建议</h2><span class="en">CONCLUSION</span></div>
+    <div class="card concl">
+      <p class="lead">优惠券秒杀下单业务在当前实现下<b>通过</b>压力测试：防超卖与一人一单两项核心保证均验证有效，功能用例覆盖时间、库存、用户、锁、参数各维度分支。</p>
+      <ul>
+        <li>修复 BUG-01/02/03：对不存在的券、非秒杀券、未登录场景做空值兜底与正确拦截，避免 NPE。</li>
+        <li>明确结束时刻边界语义：now=endTime 时是否允许下单需与业务确认。</li>
+        <li>建议为 (user_id, voucher_id) 增加数据库唯一索引作为兜底。</li>
+        <li>高并发吞吐优化方向：Redis 预扣减库存、异步消息队列削峰、库存原子 DECR；当前同步直连方案吞吐受连接池与行锁限制。</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="footer">本报告数据来自 2026-09-30 实际执行结果；压测使用专用压测券，测试数据已清理，不影响原业务数据。</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+  (function(){
+    var el = document.getElementById('chart');
+    if (!el || typeof echarts === 'undefined') return;
+    var chart = echarts.init(el);
+    chart.setOption({
+      color:['#1a6feb','#178a52'],
+      tooltip:{trigger:'axis',triggerOn:'click',renderMode:'richText',confine:true},
+      legend:{data:['阶段一 · 200并发抢100库存','阶段二 · 50已下单再抢'],top:0},
+      grid:{left:48,right:16,top:44,bottom:28,containLabel:true},
+      xAxis:{type:'category',data:['成功下单','库存不足','不允许重复下单','每人仅限一单','其他/异常'],axisLabel:{interval:0}},
+      yAxis:{type:'value',name:'请求数'},
+      series:[
+        {name:'阶段一 · 200并发抢100库存',type:'bar',barWidth:34,data:[100,100,0,0,0],
+         itemStyle:{color:'#1a6feb'}},
+        {name:'阶段二 · 50已下单再抢',type:'bar',barWidth:34,data:[0,0,0,50,0],
+         itemStyle:{color:'#178a52'}}
+      ]
+    });
+    window.addEventListener('resize',function(){chart.resize();});
+  })();
+</script>
+</body>
+</html>
