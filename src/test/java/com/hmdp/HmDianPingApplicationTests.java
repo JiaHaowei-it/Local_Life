@@ -55,5 +55,26 @@ class HmDianPingApplicationTests {
         }
     }
 
+    @Test
+    void testHyperLogLog() {
+        // 准备数组，装用户数据，一次批量添加1000个
+        String[] users = new String[1000];
+        // 数组下标
+        int index = 0;
+        // 循环模拟100万不同用户 user_1 ~ user_1000000
+        for (int i = 1; i <= 1000000; i++) {
+            users[index++] = "user_" + i;
+            // 每凑够1000条，批量add到HyperLogLog键 hll1
+            if (i % 1000 == 0) {
+                index = 0;
+                stringRedisTemplate.opsForHyperLogLog().add("hll1", users);
+            }
+        }
+        // size()：获取HLL估算的独立元素数量（UV，独立访客）
+        Long size = stringRedisTemplate.opsForHyperLogLog().size("hll1");
+        System.out.println("size = " + size);
+    }
+
+
 
 }
